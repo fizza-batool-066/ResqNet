@@ -1,0 +1,31 @@
+# Render Blueprint for ResQNet backend service
+# Docs: https://render.com/docs/blueprint-spec
+# Deploys the Next.js app as a web service. MongoDB Atlas is used as the
+# external database (no Render Postgres needed). The WebSocket mini-service
+# (ambulance-tracker) runs alongside the Next.js server inside the same
+# container.
+
+services:
+  - type: web
+    name: resqnet
+    runtime: node
+    plan: starter
+    region: singapore
+    branch: main
+    rootDir: .
+    buildCommand: bun install && bun run build
+    startCommand: |
+      cd mini-services/ambulance-tracker && bun install && (bun index.ts &) ; cd ../.. && bun run start
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+        sync: false
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
